@@ -5,7 +5,6 @@ import java.util.Map;
 import org.apache.commons.collections4.map.HashedMap;
 import org.lightcouch.CouchDbClient;
 
-import com.txmq.exo.core.PlatformLocator;
 import com.txmq.exo.messaging.ExoMessage;
 import com.txmq.exo.persistence.Block;
 import com.txmq.exo.persistence.IBlockLogger;
