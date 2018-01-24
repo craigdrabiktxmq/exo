@@ -1,7 +1,5 @@
 package com.txmq.exo.persistence;
 
-import java.io.IOException;
-
 import com.txmq.exo.messaging.ExoMessage;
 
 /**

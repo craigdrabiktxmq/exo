@@ -2,7 +2,6 @@ package com.txmq.exo.messaging.socket;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -16,7 +15,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import com.swirlds.platform.Platform;

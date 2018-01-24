@@ -4,8 +4,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.txmq.exo.messaging.ExoTransactionType;;
-
 /**
  * Annotation that indicates a method processes a certain transactiont ype.
  * The ExoTransactionRouter uses this annotation to automatically route
