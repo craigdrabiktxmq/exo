@@ -1,8 +1,6 @@
 package com.txmq.exo.transactionrouter;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +12,6 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import com.txmq.exo.messaging.ExoMessage;
-import com.txmq.exo.core.ExoPlatformLocator;
 import com.txmq.exo.core.ExoState;
 
 /**
