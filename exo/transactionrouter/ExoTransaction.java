@@ -6,6 +6,13 @@ import java.lang.annotation.Target;
 
 import com.txmq.exo.messaging.ExoTransactionType;;
 
+/**
+ * Annotation that indicates a method processes a certain transactiont ype.
+ * The ExoTransactionRouter uses this annotation to automatically route
+ * transactions by transaction type in the state's handleTransaction()
+ * method.  ExoTransactionRouter scans packages for this annotation when
+ * it is intialized.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface ExoTransaction {
