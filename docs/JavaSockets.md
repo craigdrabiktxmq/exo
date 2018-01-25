@@ -45,3 +45,9 @@ ExoPlatformLocator.initSocketMessaging(
     new String[] {"com.txmq.socketdemo.socket"}
 );
 ```
+
+## Exo Java Client
+The functionality in Exo covers the Hashgraph side of of the socket connection.  The [Exo Java Client](https://github.com/craigdrabiktxmq/exo-java-client) impolements the client application side of the socket connection.
+
+## Message Payloads
+ExoMessage payloads can be anything that implements Serializable.  In nearly all cases, your application will define a data model that will be transferred over the socket connection.  The classes that make up your data or messaging model need to be included in the Java applications on both sides of the socket connection, or you will encounter NoClassDefFound exceptions when messages are deserialized.  You will also need to include your ExoTransactionType subclass in both applications for the same reason.
