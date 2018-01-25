@@ -17,4 +17,4 @@ Exo implements the following feature set:
 Before You Begin
 ----------------
 
-Start by reading the [How a Swirld Works](SwirldsApplications.md) and [application architecture] (ApplicationArchitecture.md) documentation.  These two documents will give you a foundation in how a Swirlds application works, the challenges you'll encounter when developing on the Alpha SDK, and how Exo helps you overcome those challenges.
+Start by reading the [How a Swirld Works](SwirldsApplications.md) and [application architecture](ApplicationArchitecture.md) documentation.  These two documents will give you a foundation in how a Swirlds application works, the challenges you'll encounter when developing on the Alpha SDK, and how Exo helps you overcome those challenges.
