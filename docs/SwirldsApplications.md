@@ -1,7 +1,7 @@
 How a Swirld Works
 ==================
 
-A Swirld is basically a replicated state.  In order to build Swirlds (or applications with Swirlds), You need to understand a few basic mechanics about how the platform functions.  There are two interfaces developers must implement in order to build a Swirld - SwirldMain and SwirldState.  
+A Swirld is basically an application state replicated across each node in a Hashgraph network.  In order to build Swirlds (or applications with Swirlds), You need to understand a few basic mechanics about how the platform functions.  There are two interfaces developers must implement in order to build a Swirld - SwirldMain and SwirldState.  
 
 Your SwirldMain implementation intializes the Swirlds platform.  The init() method of your SwirldMain will be called once, before the node begins receiving messages.  This method is used to initialize any constructs you need to have in place before the node starts accepting incoming transactions.  The run() method is called once the node is ready to receive messages and start responding to transactions.  The run() method should never return, and it basically keeps the node running.
 
