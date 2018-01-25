@@ -17,18 +17,18 @@ If your operation should be forwarded to the Hashgraph and it does not require a
 To set up a mapping for a socket message handler, annotate the handler method with @ExoTransaction:
 ```java
 @ExoTransaction(SocketDemoTransactionTypes.GET_ZOO)
-	public ExoMessage getZoo(ExoMessage message, ExoState state) {
-		SocketDemoState _state = (SocketDemoState) ExoPlatformLocator.getState();
-		Zoo result = new Zoo();
-		result.lions(_state.getLions());
-		result.tigers(_state.getTigers());
-		result.bears(_state.getBears());
-		
-		return new ExoMessage(
-			new ExoTransactionType(ExoTransactionType.ACKNOWLEDGE),
-			result
-		);	
-	}
+public ExoMessage getZoo(ExoMessage message, ExoState state) {
+    SocketDemoState _state = (SocketDemoState) ExoPlatformLocator.getState();
+    Zoo result = new Zoo();
+    result.lions(_state.getLions());
+    result.tigers(_state.getTigers());
+    result.bears(_state.getBears());
+    
+    return new ExoMessage(
+        new ExoTransactionType(ExoTransactionType.ACKNOWLEDGE),
+        result
+    );	
+}
 ```
 
 Handler methods must accept an ExoMessage and ExoState parameter.  The router will pass in the message it received from the socket and a reference to the state.  Message handlers should return an instance of ExoMessage with their response.
