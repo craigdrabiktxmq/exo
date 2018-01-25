@@ -45,7 +45,7 @@ ExoPlatformLocator.getBlockLogger().setLogger(blockLogger, platform.getAddress()
 Exo can automatically route messages to the methods that process them.  Annotate each method with the transaction type it handles:
 ```java
 @ExoTransaction(ExoTransactionType.ANNOUNCE_NODE)
-public void announceNode(ExoMessage message, SocketDemoState state) { //TODO:  Refactor state so that Exo stuff is inheirited
+public void announceNode(ExoMessage message, ExoState state) { 
 	state.addEndpoint((String) message.payload);
 }
 ```
