@@ -16,12 +16,17 @@ CouchDBBlockLogger blockLogger = new CouchDBBlockLogger(
         "couchdb",
         //"localhost",
         5984);
-ExoPlatformLocator.init(platform, SocketDemoTransactionTypes.class, transactionProcessorPackages, blockLogger);
+ExoPlatformLocator.init(    platform, 
+                            SocketDemoTransactionTypes.class, 
+                            transactionProcessorPackages, 
+                            blockLogger);
 ```
 
 It can also be initialized separately, but should still be done in the init() method of your SwirldMain:
 ```java
-ExoPlatformLocator.getBlockLogger.setLogger(blockLogger, "zoo-" + platform.getAddress().getSelfName().toLowerCase());
+ExoPlatformLocator.getBlockLogger.setLogger(
+    blockLogger, 
+    "zoo-" + platform.getAddress().getSelfName().toLowerCase());
 ```
 
 ## Building Transaction Logger Plug-ins
