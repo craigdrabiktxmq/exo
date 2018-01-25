@@ -14,8 +14,7 @@ Exo implements the following feature set:
 - An architecture for structuring transaction processing logic and automated routing of transactions to transaction processors
 - A framework for logging processed transactions to blockchain-based (blockchain the data structure, not blockchain the platform)
 
-How To Build Applications on Exo
---------------------------------
+Before You Begin
+----------------
 
-### Before you begin
 Start by reading the [How a Swirld Works](SwirldsApplications.md) and [application architecture] (ApplicationArchitecture.md) documentation.  These two documents will give you a foundation in how a Swirlds application works, the challenges you'll encounter when developing on the Alpha SDK, and how Exo helps you overcome those challenges.
