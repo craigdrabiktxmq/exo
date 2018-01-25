@@ -16,3 +16,12 @@ Exo also allows developers to easily communicate with other applications via Jav
 
 See [Developing Exo Java Socket Interfaces](JavaSockets.md) to learn how to develop socket-based interfaces.
 
+## Processing Transactions
+Exo provides an architectural construct for separating business logic from your SwirldState using annotations to automatically route transactions received by your application state to transaction processor methods.  The framework defines a base message class and an extensible enum implementation for defining the list of transaction types your application processes.
+
+See [Exo Messaging](Messaging.md) and [Exo Transaction Routing](TransactionRouting.md) to learn how to set up transaction routing and processing in your application.
+
+## Logging Transactions
+Exo provides a logging framework for writing transactions out to a persistent history.  The logger writes transactions to a blockchain data structure.  It uses a plug-in architecture to enable developers to add plug-ins for their choice of data storage.  Exo provides a plug-in for CouchDB (more adaptors coming soon).
+
+See [Transaction Logging](TransactionLogging.md) to learn how to set up logging. 
