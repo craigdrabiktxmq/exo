@@ -23,3 +23,29 @@ It can also be initialized separately, but should still be done in the init() me
 ```java
 ExoPlatformLocator.getBlockLogger.setLogger(blockLogger, "zoo-" + platform.getAddress().getSelfName().toLowerCase());
 ```
+
+## Building Transaction Logger Plug-ins
+If you need to support a logging target other than CouchDB, you can implement your own logger plugin.  Logger plugins implement the IBlockLogger interface.
+
+```java
+/**
+ * Interface that defines what a storage-specific block logger 
+ * has to implement.  Exo is written to deal with IBlockLoggers, 
+ * not concrete instances of storage-specific loggers.
+ */
+public interface IBlockLogger {
+
+    /**
+     * Adds a transaction to the next block
+     */
+    public void addTransaction(ExoMessage transaction);
+    
+    /**
+     * Asks the logger to persist a block to storage
+     */
+    public void save(Block block);
+    
+}
+```
+
+Your plug-in is responsible for managing its internal transaction list and the mechanics for saving the block to whatever storage your plug-in uses.  Note that even though the save method is public, it is not automatically invoked by the logger.  Your plug-in should decide when to invoke the save method.  The CouchDB plugin writes blocks when a block contains a certain number of transactions, but you could implement a timeout-based mechanism or calculate the size of the data in the block to trigger writes, for example.
