@@ -39,5 +39,5 @@ Note that we define each transaction identifier as a static constant on the clas
 ## ExoMessage
 ExoMessage is the base messaging class used by the framework.  It defines a message as a transaction type and a payload.  The transaction type will be an instance of your ExoTransactionType subclass.  The paylod can be anything that implements Serializable.  Payloads can and should be transaction-specific.  Any code that handles a message non-generically can test the transaction type and/or the payload and cast it to the correct type.
 
-ExoMessage is used by [Exo transaction processors](TransactionRouting.md) and [Java Sockets](JavaSockets.md).
+ExoMessage is used by [Exo Transaction Processors](TransactionRouting.md) and [Java Sockets](JavaSockets.md).
 
