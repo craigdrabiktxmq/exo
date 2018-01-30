@@ -53,8 +53,9 @@ An exo-config.json file uses the following structure:
           { "key": "createDb", "value": "true"}
         ]
       }
-	  }
+   }
 }
+```
 
 The file is designed to be "portable" between socket clients and hashgraphs - configuration for socket clients is segregated from configuration for hashgraph applications.  
 
