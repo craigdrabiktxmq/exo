@@ -8,8 +8,6 @@ import java.util.Set;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 
 import com.txmq.exo.messaging.ExoMessage;
 import com.txmq.exo.core.ExoState;

@@ -1,12 +1,10 @@
 package com.txmq.exo.core;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -22,7 +20,6 @@ import com.txmq.exo.messaging.socket.TransactionServer;
 import com.txmq.exo.persistence.BlockLogger;
 import com.txmq.exo.persistence.IBlockLogger;
 import com.txmq.exo.transactionrouter.ExoTransactionRouter;
-import com.txmq.socketdemo.SocketDemoTransactionTypes;
 
 /**
  * A static locator class for Exo platform constructs.  This class allows applications

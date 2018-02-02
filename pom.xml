@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.txmq.exo</groupId>
+	<artifactId>exo-framework</artifactId>
+	<version>0.5.0</version>
+	<name>Exo Framework</name>
+	<url>https://github.com/craigdrabiktxmq/exo/</url>
+	<description>Exo is a framework for developing applications on the Swirlds Hashgraph platform. Primarily, Exo offers features and an application architecture for getting transactions into a Hashgraph, processing those transactions once they've been accepted, and logging transactions out to persistent storage.
+
+Exo was developed to provide the features that Swirlds' SDK lacks that I knew I would need to develop real-world applications. I'm sure other folks have needs and ideasthat aren't on my radar yet, so I would encourage feature requests and development submissions from other Hashgraph developers. The framework will only improve for everyone as more people get involved.</description>
+	<scm>
+		<url>https://github.com/craigdrabiktxmq/exo/</url>
+		<developerConnection>TxMQ, Inc</developerConnection>
+	</scm>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+	</build>
+	<dependencyManagement>
+  		<dependencies>
+	  		<dependency>
+		    		<groupId>org.glassfish.jersey</groupId>
+			    <artifactId>jersey-bom</artifactId>
+			    <version>2.26</version>
+			    <type>pom</type>
+			    <scope>import</scope>
+			</dependency>
+  		</dependencies>
+	</dependencyManagement>
+ 	<dependencies>
+		<dependency>
+		    <groupId>org.glassfish.jersey.inject</groupId>
+		    <artifactId>jersey-hk2</artifactId>
+		</dependency>
+	  	<dependency>
+	  		<groupId>org.glassfish.jersey.containers</groupId>
+	  		<artifactId>jersey-container-grizzly2-http</artifactId>
+	  	</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.jaxrs</groupId>
+			<artifactId>jackson-jaxrs-json-provider</artifactId>
+			<version>${jackson-version}</version>
+	    </dependency>
+	    <dependency>
+	  		<groupId>org.glassfish.jersey.media</groupId>
+	  		<artifactId>jersey-media-json-jackson</artifactId>
+	  	</dependency>
+	    <dependency>
+			<groupId>SwirldsPlatform</groupId>
+			<artifactId>platform</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+	    </dependency>
+	    <dependency>
+			<groupId>org.lightcouch</groupId>
+		 	<artifactId>lightcouch</artifactId>
+			<version>0.2.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.reflections</groupId>
+		    <artifactId>reflections</artifactId>
+		    <version>0.9.9</version>
+		</dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+    		<id>txmq-local</id>
+    		<name>TxMQ Local</name>
+    		<url>file://${project.basedir}/repo</url>
+    	</repository>
+  </repositories>
+    <properties>
+    <java.version>1.8</java.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <jackson-version>2.8.9</jackson-version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- 
+    <junit-version>4.12</junit-version>
+    <logback-version>1.1.7</logback-version>
+    <servlet-api-version>2.5</servlet-api-version>
+    <swagger-core-version>1.5.15</swagger-core-version>
+    <jetty-version>9.2.9.v20150224</jetty-version>
+    <jersey2-version>2.22.2</jersey2-version>
+     -->
+  </properties>
+</project>
