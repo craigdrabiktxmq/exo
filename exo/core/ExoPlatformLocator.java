@@ -7,10 +7,14 @@ import java.net.URI;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import com.intiva.intivahealth.IntivaHealthTransactionTypes;
 import com.swirlds.platform.Platform;
 import com.swirlds.platform.SwirldState;
 import com.txmq.exo.config.ExoConfig;
@@ -22,7 +26,6 @@ import com.txmq.exo.messaging.socket.TransactionServer;
 import com.txmq.exo.persistence.BlockLogger;
 import com.txmq.exo.persistence.IBlockLogger;
 import com.txmq.exo.transactionrouter.ExoTransactionRouter;
-import com.txmq.socketdemo.SocketDemoTransactionTypes;
 
 /**
  * A static locator class for Exo platform constructs.  This class allows applications
@@ -96,7 +99,8 @@ public class ExoPlatformLocator {
 		if (config.hashgraphConfig.rest != null) {
 			try {
 				messagingConfig = parseMessagingConfig(config.hashgraphConfig.rest);
-				initREST(messagingConfig.port, messagingConfig.handlers);
+				initREST(messagingConfig);
+				//initREST(messagingConfig.port, messagingConfig.handlers);
 			} catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("Error configuring REST:  " + e.getMessage());
 			}
@@ -144,7 +148,9 @@ public class ExoPlatformLocator {
 		
 		result.secured = config.secured;
 		result.clientKeystore = config.clientKeystore;
+		result.clientTruststore = config.clientTruststore;
 		result.serverKeystore = config.serverKeystore;
+		result.serverTruststore = config.serverTruststore;
 		return result;
 	}
 	
@@ -202,18 +208,48 @@ public class ExoPlatformLocator {
 	 * @param packages
 	 */
 	public static void initREST(int port, String[] packages) {
-		URI baseUri = UriBuilder.fromUri("http://0.0.0.0").port(port).build();
+		MessagingConfig internalConfig = new MessagingConfig();
+		internalConfig.port = port;
+		internalConfig.handlers = packages;
+		
+		initREST(internalConfig);		
+	}
+	
+	/**
+	 * Initializes Grizzly-based REST interfaces as defined in the messaging config.  This method will
+	 * allow for REST endpoints using HTTPS by defining keystore information in exo-config.json.
+	 * Enabling REST will automatically expose the endpoints service and generate an ANNOUNCE_NODE message.
+	 * @param restConfig
+	 */
+	public static void initREST(MessagingConfig restConfig) {
+		URI baseUri = UriBuilder.fromUri("http://0.0.0.0").port(restConfig.port).build();
 		ResourceConfig config = new ResourceConfig()
 				.packages("com.txmq.exo.messaging.rest")
 				.register(new CORSFilter())
-				.register(JacksonFeature.class);
+				.register(JacksonFeature.class)
+				.register(MultiPartFeature.class);
 		
-		for (String pkg : packages) {
+		for (String pkg : restConfig.handlers) {
 			config.packages(pkg);
 		}
 		
 		System.out.println("Attempting to start Grizzly on " + baseUri);
-		GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
+		if (restConfig.secured == true) {
+			SSLContextConfigurator sslContext = new SSLContextConfigurator();
+			sslContext.setKeyStoreFile(restConfig.serverKeystore.path);
+			sslContext.setKeyStorePass(restConfig.serverKeystore.password);
+			sslContext.setTrustStoreFile(restConfig.serverTruststore.path);
+			sslContext.setTrustStorePass(restConfig.serverTruststore.password);
+			
+			GrizzlyHttpServerFactory.createHttpServer(
+				baseUri, 
+				config, 
+				true, 
+				new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(false)
+			);
+		} else {
+			GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
+		}
 		
 		try {
 			platform.createTransaction(
