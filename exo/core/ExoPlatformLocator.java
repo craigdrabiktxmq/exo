@@ -3,6 +3,8 @@ package com.txmq.exo.core;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.time.Instant;
+import java.util.Random;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -52,6 +54,34 @@ public class ExoPlatformLocator {
 	 */
 	private static BlockLogger blockLogger = new BlockLogger();
 
+	/**
+	 * When run in test mode, Exo will maintain a single instance of the application's 
+	 * state so that JUnit tests can run against code that requires data 
+	 * in the state, without a dependency on the platform being up and running.
+	 * 
+	 * Block logging will be disabled when running in test mode.
+	 */
+	private static ExoState testState = null;
+	
+	/**
+	 * Places Exo in test mode, using the passed-in instance of a state.  This is useful
+	 * for automated testing where you may want to configure an application state manually
+	 * and run a series of tests against that known state.
+	 */
+	public static void enableTestMode(ExoState state) {
+		ExoPlatformLocator.testState = state;
+	}
+	
+	/**
+	 * Places Exo in test mode.  Exo will create an instance 
+	 * of the supplied type to service as a mock state. 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 */
+	public static void enableTestMode(Class<? extends ExoState> stateClass) throws InstantiationException, IllegalAccessException {
+		ExoPlatformLocator.testState = stateClass.newInstance();
+	}
+	
 	/**
 	 * Initializes the platform from an exo-config.json file located 
 	 * in the same directory as the application runs in.
@@ -107,7 +137,7 @@ public class ExoPlatformLocator {
 		}
 		
 		//configure block logging, if indicated in the config file
-		if (config.hashgraphConfig.blockLogger != null) {
+		if (config.hashgraphConfig.blockLogger != null && ExoPlatformLocator.testState == null) {
 			try {
 				Class<? extends IBlockLogger> loggerClass = 
 					(Class<? extends IBlockLogger>) Class.forName(config.hashgraphConfig.blockLogger.loggerClass);
@@ -310,6 +340,36 @@ public class ExoPlatformLocator {
 	}
 	
 	/**
+	 * Submits a transaction to the platform.  Applications should use this method
+	 * over ExoPlatformLocator.getPlatform().createTransaction() to enable unit testing 
+	 * via test mode.
+	 * 
+	 * This signature is a convenience method for passing ExoMessages.
+	 */
+	public static boolean createTransaction(ExoMessage transaction) throws IOException {
+		return createTransaction(transaction.serialize(), null);
+	}
+	
+	/**
+	 * Submits a transaction to the platform.  Applications should use this method
+	 * over ExoPlatformLocator.getPlatform().createTransaction() to enable unit testing 
+	 * via test mode.
+	 * 
+	 * This signature matches the createTransaction signature of the Swirlds Platform.
+	 */
+	public static boolean createTransaction(byte[] transaction, long[] hintIds) {
+		if (testState == null) {
+			return platform.createTransaction(transaction, null);
+		} else {
+			long transactionID = new Random().nextLong();
+			Instant timeCreated = Instant.now();
+			testState.handleTransaction(transactionID, false, timeCreated, transaction, null);
+			testState.handleTransaction(transactionID, true, timeCreated, transaction, null);
+			return true;
+		}
+	}
+	
+	/**
 	 * Accessor for a reference to the Swirlds platform.  Developers must call 
 	 * ExoPlatformLocator.init() to intialize the locator before calling getPlatform()
 	 */
@@ -326,17 +386,25 @@ public class ExoPlatformLocator {
 	
 	/**
 	 * Accessor for Swirlds state.  Developers must call ExoPlatformLocator.init()
-	 * to initialize the locator before calling getState()
+	 * to initialize the locator before calling getState(), unless running in test mode.
+	 * 
+	 * Developers should prefer this method to ExoPlatformLocator.getPlatform().getState()
+	 * because this method supports returning a state in test mode without initializing
+	 * the platform.
 	 */
 	public static SwirldState getState() throws IllegalStateException {
-		if (platform == null) {
-			throw new IllegalStateException(
-				"PlatformLocator has not been initialized.  " + 
-				"Please initialize PlatformLocator in your SwirldMain implementation."
-			);
+		if (ExoPlatformLocator.testState == null) {
+			if (platform == null) {
+				throw new IllegalStateException(
+					"PlatformLocator has not been initialized.  " + 
+					"Please initialize PlatformLocator in your SwirldMain implementation."
+				);
+			}
+			
+			return platform.getState();
+		} else {
+			return (SwirldState) testState;
 		}
-		
-		return platform.getState();
 	}
 	
 	/**
