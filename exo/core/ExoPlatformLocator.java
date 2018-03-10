@@ -59,7 +59,6 @@ public class ExoPlatformLocator {
 	 */
 	public static synchronized void initFromConfig(Platform platform) {
 		ExoPlatformLocator.platform = platform;
-		String nodeName = platform.getAddress().getSelfName();
 		ExoConfig config = ExoConfig.getConfig();
 		
 		//Initialize transaction types
@@ -113,7 +112,7 @@ public class ExoPlatformLocator {
 					(Class<? extends IBlockLogger>) Class.forName(config.hashgraphConfig.blockLogger.loggerClass);
 				IBlockLogger logger = loggerClass.newInstance();
 				logger.configure(config.hashgraphConfig.blockLogger.parameters);
-				blockLogger.setLogger(logger, nodeName);
+				blockLogger.setLogger(logger, platform.getAddress().getSelfName());
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException("Error configuring block logger:  " + e.getMessage());
 			}			
@@ -130,7 +129,12 @@ public class ExoPlatformLocator {
 			//Test if there's a derived port value.  If not, we have an invalid messaging config
 			if (config.derivedPort != null) {
 				//Calculate the port for socket connections based on the hashgraph's port
-				result.port = platform.getAddress().getPortExternalIpv4() + config.derivedPort;
+				//If we're in test mode, mock this up to be a typical value, e.g. 5220X
+				if (testState == null) {
+					result.port = platform.getAddress().getPortExternalIpv4() + config.derivedPort;
+				} else {
+					result.port = 50204 + config.derivedPort;
+				}
 			} else {
 				throw new IllegalArgumentException(
 					"One of \"port\" or \"derivedPort\" must be defined."
@@ -252,12 +256,11 @@ public class ExoPlatformLocator {
 		}
 		
 		try {
-			platform.createTransaction(
+			createTransaction(
 				new ExoMessage(
 					new ExoTransactionType(ExoTransactionType.ANNOUNCE_NODE),
 					baseUri.toString()
-				).serialize(),
-				null
+				)
 			);
 					
 		} catch (IOException e1) {
