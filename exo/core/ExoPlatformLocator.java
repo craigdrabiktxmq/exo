@@ -366,7 +366,17 @@ public class ExoPlatformLocator {
 		} else {
 			long transactionID = new Random().nextLong();
 			Instant timeCreated = Instant.now();
-			testState.handleTransaction(transactionID, false, timeCreated, transaction, null);
+			
+			ExoState preConsensusState = null;
+			try {
+				preConsensusState = (ExoState) testState.getClass().getConstructors()[0].newInstance();
+			} catch (Exception e) {
+				// TODO Better error handling..
+				e.printStackTrace();
+			}
+
+			preConsensusState.copyFrom((SwirldState) testState);
+			preConsensusState.handleTransaction(transactionID, false, timeCreated, transaction, null);
 			testState.handleTransaction(transactionID, true, timeCreated, transaction, null);
 			return true;
 		}
