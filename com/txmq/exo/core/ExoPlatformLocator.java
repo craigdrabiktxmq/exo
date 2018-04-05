@@ -404,7 +404,7 @@ public class ExoPlatformLocator {
 	 * because this method supports returning a state in test mode without initializing
 	 * the platform.
 	 */
-	public static SwirldState getState() throws IllegalStateException {
+	public static ExoState getState() throws IllegalStateException {
 		if (ExoPlatformLocator.testState == null) {
 			if (platform == null) {
 				throw new IllegalStateException(
@@ -413,9 +413,9 @@ public class ExoPlatformLocator {
 				);
 			}
 			
-			return platform.getState();
+			return (ExoState) platform.getState();
 		} else {
-			return (SwirldState) testState;
+			return (ExoState) testState;
 		}
 	}
 	
