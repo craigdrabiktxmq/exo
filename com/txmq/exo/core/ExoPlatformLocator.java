@@ -358,7 +358,7 @@ public class ExoPlatformLocator {
 			return (ExoState) testState;
 		}
 		
-		return platform.getState();
+		return (ExoState) platform.getState();
 	}
 	
 	/**
