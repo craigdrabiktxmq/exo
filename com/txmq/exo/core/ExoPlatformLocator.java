@@ -349,7 +349,7 @@ public class ExoPlatformLocator {
 	 * This signature is a convenience method for passing ExoMessages.
 	 */
 	public static boolean createTransaction(ExoMessage transaction) throws IOException {
-		return createTransaction(transaction.serialize(), null);
+		return createTransaction(transaction.serialize());
 	}
 	
 	/**
@@ -361,7 +361,7 @@ public class ExoPlatformLocator {
 	 */
 	public static boolean createTransaction(byte[] transaction, long[] hintIds) {
 		if (testState == null) {
-			return platform.createTransaction(transaction, null);
+			return platform.createTransaction(transaction);
 		} else {
 			long transactionID = new Random().nextLong();
 			Instant timeCreated = Instant.now();
