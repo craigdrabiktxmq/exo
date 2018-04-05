@@ -3,17 +3,12 @@ package com.txmq.exo.core;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.time.Instant;
-import java.util.Random;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.swirlds.platform.Platform;
@@ -27,6 +22,7 @@ import com.txmq.exo.messaging.socket.TransactionServer;
 import com.txmq.exo.persistence.BlockLogger;
 import com.txmq.exo.persistence.IBlockLogger;
 import com.txmq.exo.transactionrouter.ExoTransactionRouter;
+import com.txmq.socketdemo.SocketDemoTransactionTypes;
 
 /**
  * A static locator class for Exo platform constructs.  This class allows applications
@@ -54,31 +50,16 @@ public class ExoPlatformLocator {
 	private static BlockLogger blockLogger = new BlockLogger();
 
 	/**
-	 * When run in test mode, Exo will maintain a single instance of the application's 
-	 * state so that JUnit tests can run against code that requires data 
-	 * in the state, without a dependency on the platform being up and running.
-	 * 
-	 * Block logging will be disabled when running in test mode.
+	 * Indicates that the node should shut down 
 	 */
-	private static ExoState testState = null;
+	private static boolean shouldShutdown = false;
 	
-	/**
-	 * Places Exo in test mode, using the passed-in instance of a state.  This is useful
-	 * for automated testing where you may want to configure an application state manually
-	 * and run a series of tests against that known state.
-	 */
-	public static void enableTestMode(ExoState state) {
-		ExoPlatformLocator.testState = state;
+	public static boolean shouldShutdown() {
+		return shouldShutdown;
 	}
 	
-	/**
-	 * Places Exo in test mode.  Exo will create an instance 
-	 * of the supplied type to service as a mock state. 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 */
-	public static void enableTestMode(Class<? extends ExoState> stateClass) throws InstantiationException, IllegalAccessException {
-		ExoPlatformLocator.testState = stateClass.newInstance();
+	public static void shutdown() {
+		shouldShutdown = true;
 	}
 	
 	/**
@@ -88,6 +69,7 @@ public class ExoPlatformLocator {
 	 */
 	public static synchronized void initFromConfig(Platform platform) {
 		ExoPlatformLocator.platform = platform;
+		String nodeName = platform.getAddress().getSelfName();
 		ExoConfig config = ExoConfig.getConfig();
 		
 		//Initialize transaction types
@@ -127,21 +109,20 @@ public class ExoPlatformLocator {
 		if (config.hashgraphConfig.rest != null) {
 			try {
 				messagingConfig = parseMessagingConfig(config.hashgraphConfig.rest);
-				initREST(messagingConfig);
-				//initREST(messagingConfig.port, messagingConfig.handlers);
+				initREST(messagingConfig.port, messagingConfig.handlers);
 			} catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("Error configuring REST:  " + e.getMessage());
 			}
 		}
 		
 		//configure block logging, if indicated in the config file
-		if (config.hashgraphConfig.blockLogger != null && ExoPlatformLocator.testState == null) {
+		if (config.hashgraphConfig.blockLogger != null) {
 			try {
 				Class<? extends IBlockLogger> loggerClass = 
 					(Class<? extends IBlockLogger>) Class.forName(config.hashgraphConfig.blockLogger.loggerClass);
 				IBlockLogger logger = loggerClass.newInstance();
 				logger.configure(config.hashgraphConfig.blockLogger.parameters);
-				blockLogger.setLogger(logger, platform.getAddress().getSelfName());
+				blockLogger.setLogger(logger, nodeName);
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException("Error configuring block logger:  " + e.getMessage());
 			}			
@@ -158,12 +139,7 @@ public class ExoPlatformLocator {
 			//Test if there's a derived port value.  If not, we have an invalid messaging config
 			if (config.derivedPort != null) {
 				//Calculate the port for socket connections based on the hashgraph's port
-				//If we're in test mode, mock this up to be a typical value, e.g. 5220X
-				if (testState == null) {
-					result.port = platform.getAddress().getPortExternalIpv4() + config.derivedPort;
-				} else {
-					result.port = 50204 + config.derivedPort;
-				}
+				result.port = platform.getAddress().getPortExternalIpv4() + config.derivedPort;
 			} else {
 				throw new IllegalArgumentException(
 					"One of \"port\" or \"derivedPort\" must be defined."
@@ -181,9 +157,7 @@ public class ExoPlatformLocator {
 		
 		result.secured = config.secured;
 		result.clientKeystore = config.clientKeystore;
-		result.clientTruststore = config.clientTruststore;
 		result.serverKeystore = config.serverKeystore;
-		result.serverTruststore = config.serverTruststore;
 		return result;
 	}
 	
@@ -241,55 +215,25 @@ public class ExoPlatformLocator {
 	 * @param packages
 	 */
 	public static void initREST(int port, String[] packages) {
-		MessagingConfig internalConfig = new MessagingConfig();
-		internalConfig.port = port;
-		internalConfig.handlers = packages;
-		
-		initREST(internalConfig);		
-	}
-	
-	/**
-	 * Initializes Grizzly-based REST interfaces as defined in the messaging config.  This method will
-	 * allow for REST endpoints using HTTPS by defining keystore information in exo-config.json.
-	 * Enabling REST will automatically expose the endpoints service and generate an ANNOUNCE_NODE message.
-	 * @param restConfig
-	 */
-	public static void initREST(MessagingConfig restConfig) {
-		URI baseUri = UriBuilder.fromUri("http://0.0.0.0").port(restConfig.port).build();
+		URI baseUri = UriBuilder.fromUri("http://0.0.0.0").port(port).build();
 		ResourceConfig config = new ResourceConfig()
 				.packages("com.txmq.exo.messaging.rest")
 				.register(new CORSFilter())
-				.register(JacksonFeature.class)
-				.register(MultiPartFeature.class);
+				.register(JacksonFeature.class);
 		
-		for (String pkg : restConfig.handlers) {
+		for (String pkg : packages) {
 			config.packages(pkg);
 		}
 		
 		System.out.println("Attempting to start Grizzly on " + baseUri);
-		if (restConfig.secured == true) {
-			SSLContextConfigurator sslContext = new SSLContextConfigurator();
-			sslContext.setKeyStoreFile(restConfig.serverKeystore.path);
-			sslContext.setKeyStorePass(restConfig.serverKeystore.password);
-			sslContext.setTrustStoreFile(restConfig.serverTruststore.path);
-			sslContext.setTrustStorePass(restConfig.serverTruststore.password);
-			
-			GrizzlyHttpServerFactory.createHttpServer(
-				baseUri, 
-				config, 
-				true, 
-				new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(false)
-			);
-		} else {
-			GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
-		}
+		GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
 		
 		try {
-			createTransaction(
+			platform.createTransaction(
 				new ExoMessage(
 					new ExoTransactionType(ExoTransactionType.ANNOUNCE_NODE),
 					baseUri.toString()
-				)
+				).serialize()
 			);
 					
 		} catch (IOException e1) {
@@ -398,11 +342,7 @@ public class ExoPlatformLocator {
 	
 	/**
 	 * Accessor for Swirlds state.  Developers must call ExoPlatformLocator.init()
-	 * to initialize the locator before calling getState(), unless running in test mode.
-	 * 
-	 * Developers should prefer this method to ExoPlatformLocator.getPlatform().getState()
-	 * because this method supports returning a state in test mode without initializing
-	 * the platform.
+	 * to initialize the locator before calling getState()
 	 */
 	public static ExoState getState() throws IllegalStateException {
 		if (ExoPlatformLocator.testState == null) {
@@ -417,6 +357,8 @@ public class ExoPlatformLocator {
 		} else {
 			return (ExoState) testState;
 		}
+		
+		return platform.getState();
 	}
 	
 	/**

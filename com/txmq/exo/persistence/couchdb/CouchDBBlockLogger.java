@@ -190,4 +190,10 @@ public class CouchDBBlockLogger implements IBlockLogger {
 		
 	}
 
+	/**
+	 * Flushes all queued blocks to the DB
+	 */
+	public void flush() {
+		this.save(block);
+	}
 }
