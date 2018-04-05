@@ -286,6 +286,46 @@ public class ExoPlatformLocator {
 	}
 	
 	/**
+	 * Submits a transaction to the platform.  Applications should use this method
+	 * over ExoPlatformLocator.getPlatform().createTransaction() to enable unit testing 
+	 * via test mode.
+	 * 
+	 * This signature is a convenience method for passing ExoMessages.
+	 */
+	public static boolean createTransaction(ExoMessage transaction) throws IOException {
+		return createTransaction(transaction.serialize(), null);
+	}
+	
+	/**
+	 * Submits a transaction to the platform.  Applications should use this method
+	 * over ExoPlatformLocator.getPlatform().createTransaction() to enable unit testing 
+	 * via test mode.
+	 * 
+	 * This signature matches the createTransaction signature of the Swirlds Platform.
+	 */
+	public static boolean createTransaction(byte[] transaction, long[] hintIds) {
+		if (testState == null) {
+			return platform.createTransaction(transaction);
+		} else {
+			long transactionID = new Random().nextLong();
+			Instant timeCreated = Instant.now();
+			
+			ExoState preConsensusState = null;
+			try {
+				preConsensusState = (ExoState) testState.getClass().getConstructors()[0].newInstance();
+			} catch (Exception e) {
+				// TODO Better error handling..
+				e.printStackTrace();
+			}
+
+			preConsensusState.copyFrom((SwirldState) testState);
+			preConsensusState.handleTransaction(transactionID, false, timeCreated, transaction, null);
+			testState.handleTransaction(transactionID, true, timeCreated, transaction, null);
+			return true;
+		}
+	}
+	
+	/**
 	 * Accessor for a reference to the Swirlds platform.  Developers must call 
 	 * ExoPlatformLocator.init() to intialize the locator before calling getPlatform()
 	 */
@@ -304,12 +344,18 @@ public class ExoPlatformLocator {
 	 * Accessor for Swirlds state.  Developers must call ExoPlatformLocator.init()
 	 * to initialize the locator before calling getState()
 	 */
-	public static SwirldState getState() throws IllegalStateException {
-		if (platform == null) {
-			throw new IllegalStateException(
-				"PlatformLocator has not been initialized.  " + 
-				"Please initialize PlatformLocator in your SwirldMain implementation."
-			);
+	public static ExoState getState() throws IllegalStateException {
+		if (ExoPlatformLocator.testState == null) {
+			if (platform == null) {
+				throw new IllegalStateException(
+					"PlatformLocator has not been initialized.  " + 
+					"Please initialize PlatformLocator in your SwirldMain implementation."
+				);
+			}
+			
+			return (ExoState) platform.getState();
+		} else {
+			return (ExoState) testState;
 		}
 		
 		return platform.getState();
