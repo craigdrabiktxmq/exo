@@ -119,12 +119,14 @@ public class CouchDBBlockLogger implements IBlockLogger {
 	 */
 	@Override
 	public synchronized void save(Block block) {
-		Block blockToSave = this.block;
-		this.block = new Block();
-		this.block.setIndex(blockToSave.getIndex() + 1);
-		blockToSave.commit();
-		this.block.setPreviousBlockHash(blockToSave.getHash());
-		this.client.save(blockToSave);
+		if (this.block.getBlockSize() > 0) {
+			Block blockToSave = this.block;
+			this.block = new Block();
+			this.block.setIndex(blockToSave.getIndex() + 1);
+			blockToSave.commit();
+			this.block.setPreviousBlockHash(blockToSave.getHash());
+			this.client.save(blockToSave);
+		}
 	}
 
 	/**
