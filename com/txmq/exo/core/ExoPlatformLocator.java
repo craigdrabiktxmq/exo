@@ -1,14 +1,12 @@
 package com.txmq.exo.core;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Random;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -82,6 +80,13 @@ public class ExoPlatformLocator {
 	}
 	
 	/**
+	 * Tests if the application is running in test mode
+	 */
+	public static boolean isTestMode() {
+		return (ExoPlatformLocator.testState != null);
+	}
+
+	/**
 	 * Indicates that the node should shut down 
 	 */
 	private static boolean shouldShutdown = false;
@@ -99,6 +104,7 @@ public class ExoPlatformLocator {
 	 * in the same directory as the application runs in.
 	 * @throws ClassNotFoundException 
 	 */
+	@SuppressWarnings("unchecked")
 	public static synchronized void initFromConfig(Platform platform) {
 		ExoPlatformLocator.platform = platform;
 		ExoConfig config = ExoConfig.getConfig();
@@ -298,10 +304,27 @@ public class ExoPlatformLocator {
 		}
 		
 		try {
+			String externalUrl = baseUri.toString();
+			if (platform != null) {
+				externalUrl = "http://";
+				byte[] rawAddress = platform.getAddress().getAddressExternalIpv4();
+				for (int ptr = 0;  ptr < rawAddress.length;  ptr++) {
+					int i = rawAddress[ptr] & 0xFF;
+					externalUrl += Integer.toString(i);
+					if (ptr < rawAddress.length - 1) {
+						externalUrl += ".";
+					}
+				}
+				externalUrl += ":" + restConfig.port;
+				
+				System.out.println("Reporting available REST API at " + externalUrl);
+			} else {
+				
+			}
 			createTransaction(
 				new ExoMessage(
 					new ExoTransactionType(ExoTransactionType.ANNOUNCE_NODE),
-					baseUri.toString()
+					externalUrl
 				)
 			);
 					
