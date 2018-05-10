@@ -245,4 +245,11 @@ public class CouchDBBlockLogger implements IBlockLogger {
 		this.initialize();
 		
 	}
+	
+	/**
+	 * Flushes the current in-memory block to the database.  Used to gracefully shut down the hashgraph
+	 */
+	public void flush() {
+		this.save(block);
+	}
 }

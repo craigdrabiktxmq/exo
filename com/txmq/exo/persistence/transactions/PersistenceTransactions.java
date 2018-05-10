@@ -10,7 +10,7 @@ import com.txmq.exo.transactionrouter.ExoTransaction;
 public class PersistenceTransactions {
 
 	@ExoTransaction(ExoTransactionType.SHUTDOWN)
-	public ExoMessage shutdown(ExoMessage message, ExoState state) {
+	public ExoMessage shutdown(ExoMessage message, ExoState state, boolean consensus) {
 		//If we have a block logger, then ask it to flush to the chain.
 		if (ExoPlatformLocator.getBlockLogger() != null) {
 			ExoPlatformLocator.shutdown();	
@@ -22,7 +22,7 @@ public class PersistenceTransactions {
 	}
 	
 	@ExoTransaction(ExoTransactionType.RECOVER_STATE)
-	public ExoMessage recoverState(ExoMessage message, ExoState state) {
+	public ExoMessage recoverState(ExoMessage message, ExoState state, boolean consensus) {
 		return message;
 	}
 }
