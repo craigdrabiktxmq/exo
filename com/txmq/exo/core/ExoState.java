@@ -90,7 +90,7 @@ public class ExoState {
 			if (consensus) {
 				ExoPlatformLocator.getBlockLogger().addTransaction(message, this.myName);
 			}
-			ExoPlatformLocator.getTransactionRouter().routeTransaction(message, this);				
+			ExoPlatformLocator.getTransactionRouter().routeTransaction(message, this, consensus);				
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
