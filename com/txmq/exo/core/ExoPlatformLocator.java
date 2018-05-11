@@ -3,10 +3,15 @@ package com.txmq.exo.core;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.grizzly.GrizzlyFuture;
+import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -51,6 +56,11 @@ public class ExoPlatformLocator {
 	 */
 	private static BlockLogger blockLogger = new BlockLogger();
 
+	/**
+	 * Tracks running instances of Grizzly so they can be shut down later. 
+	 */
+	private static List<HttpServer> httpServers = new ArrayList<HttpServer>();
+	
 	/**
 	 * When run in test mode, Exo will maintain a single instance of the application's 
 	 * state so that JUnit tests can run against code that requires data 
@@ -97,6 +107,26 @@ public class ExoPlatformLocator {
 	
 	public static void shutdown() {
 		shouldShutdown = true;
+		
+		//TODO:  Shut down socket listeners
+		
+		//This will be slow, but in production there should only be one 
+		//httpServer in the list so forrealz it'll make no difference
+		try {
+			for (HttpServer httpServer : httpServers) {
+				GrizzlyFuture<HttpServer> future = httpServer.shutdown(30, TimeUnit.SECONDS);
+				future.get();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		//Sleep 30 seconds to make sure we allow time for transactions to finish processing.
+		try {
+			Thread.sleep(30000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		getBlockLogger().flushLoggers();
 	}
 	
 	/**
@@ -286,6 +316,7 @@ public class ExoPlatformLocator {
 		}
 		
 		System.out.println("Attempting to start Grizzly on " + baseUri);
+		HttpServer grizzly = null;
 		if (restConfig.secured == true) {
 			SSLContextConfigurator sslContext = new SSLContextConfigurator();
 			sslContext.setKeyStoreFile(restConfig.serverKeystore.path);
@@ -293,16 +324,22 @@ public class ExoPlatformLocator {
 			sslContext.setTrustStoreFile(restConfig.serverTruststore.path);
 			sslContext.setTrustStorePass(restConfig.serverTruststore.password);
 			
-			GrizzlyHttpServerFactory.createHttpServer(
+			grizzly = GrizzlyHttpServerFactory.createHttpServer(
 				baseUri, 
 				config, 
 				true, 
 				new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(false)
 			);
 		} else {
-			GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
+			grizzly = GrizzlyHttpServerFactory.createHttpServer(baseUri, config);
 		}
 		
+		//Track Grizzly instances so they can be shut down later
+		if (grizzly != null) {
+			httpServers.add(grizzly);
+		}
+		
+		//Publish available Exo API endpoints to the HG.
 		try {
 			String externalUrl = baseUri.toString();
 			if (platform != null) {
