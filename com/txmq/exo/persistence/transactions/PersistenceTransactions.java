@@ -13,7 +13,6 @@ public class PersistenceTransactions {
 		//If we have a block logger, then ask it to flush to the chain.
 		if (ExoPlatformLocator.getBlockLogger() != null) {
 			ExoPlatformLocator.shutdown();	
-			ExoPlatformLocator.getBlockLogger().flush(state.getMyName());
 			System.out.println("It is now safe to shut down.");
 		}
 		
