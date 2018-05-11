@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;

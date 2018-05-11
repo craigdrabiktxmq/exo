@@ -11,7 +11,6 @@ import com.swirlds.platform.AddressBook;
 import com.swirlds.platform.Platform;
 import com.swirlds.platform.SwirldState;
 import com.txmq.exo.messaging.ExoMessage;
-import com.txmq.exo.persistence.BlockLogger;
 
 /**
  * ExoState is a base class for developers to extend when implementing Swirlds states.
